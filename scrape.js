@@ -1,7 +1,7 @@
 const puppeteer = require("puppeteer");
-const { resourceLimits } = require("worker_threads");
+//const { resourceLimits } = require("worker_threads");
 
-let scrape = async () => {
+let scrape = (async () => {
     const browser = await puppeteer.launch({headless: false});
     const page = await browser.newPage();
 
@@ -31,9 +31,6 @@ let scrape = async () => {
 
     browser.close();
     return books;
-};
-
-scrape().then((value) => {
+})().then((value) => {
     console.log(value);
 });
-
