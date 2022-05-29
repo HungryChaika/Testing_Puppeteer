@@ -1,5 +1,4 @@
 const puppeteer = require("puppeteer");
-//const { resourceLimits } = require("worker_threads");
 
 let scrape = (async () => {
     const browser = await puppeteer.launch({headless: false});
