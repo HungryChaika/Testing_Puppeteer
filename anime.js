@@ -1,5 +1,69 @@
-//  **************************************** KINOPOISK.RU ****************************************
-// (Пролетает сразу же!!!!!!!!! - капча и проблемы с селектором);
+//  **************************************** ANIME.GO ****************************************
+// При переходах по анимешкам и возвращении обратно к списку, тебя отскролит выше. Как итог
+// в цикле перебора (с кликами) появляется ошибка, т.к. дочернего элемента с такой большой
+// позицией просто нет ( i ).
+// Возможное решение:   Можно брать ссылки от элементов, а переходить по ним потом или как вариант,
+// можно не кликать по анимешкам, а открывать в новой вкладке (ещё не проверял).
+
+const puppeteer = require("puppeteer");
+
+let scrape = (async (document) => {
+    const browser = await puppeteer.launch({headless: false});
+    const page = await browser.newPage();
+
+    await page.goto("https://animego.org/anime");
+    await page.waitForTimeout(2000);
+/*                                                      Рабочий скроллинг!!!!!!
+    await page.evaluate(async () => {
+        await new Promise((resolve, reject) => {
+            const timer = setInterval(() => {
+                const expected_number_of_elements_after_scrolling = 100;
+                const scroll_distance = 300;
+                window.scrollBy(0, scroll_distance);
+                if(document.querySelector('#anime-list-container').childElementCount >= expected_number_of_elements_after_scrolling) {
+                    clearInterval(timer);
+                    resolve();
+                }
+            }, 100);
+        });
+    });
+*/
+    const number_of_elems_per_page = await page.evaluate(() => {
+        let elems = document.querySelector('#anime-list-container');
+        return elems.childElementCount;
+    });
+/*
+    browser.close();
+    return number_of_elems_per_page;
+*/
+    const list_anime = [];
+
+    for(let i = 1; i <= number_of_elems_per_page; i++) {
+        const elem = await page.evaluate(i => {
+            return document.querySelector(`#anime-list-container > div:nth-child(${i}) > div > div.media-body > div.h5.font-weight-normal.mb-1 > a`);
+        });
+        list_anime.push(elem);
+    };
+/*  Переход по анимешкам;
+    for(let i = 1; i <= number_of_elems_per_page; i++) {
+        await page.click(`#anime-list-container > div:nth-child(${i}) > div > div.media-body > div.h5.font-weight-normal.mb-1 > a`);
+        await page.waitForTimeout(2000);
+        const elem = await page.evaluate(() => {
+            let title = document.querySelector('h1').innerText;
+            return {
+                title
+            }
+        });
+        list_anime.push(elem);
+        await page.goBack();
+    };
+*/
+    browser.close();
+    return list_anime;
+})().then((value) => {
+    console.log(value);
+});
+
 
 
 
@@ -69,51 +133,6 @@ let scrape = (async () => {
     browser.close();
     return conteiner_all_elems;
 
-})().then((value) => {
-    console.log(value);
-});
-*/
-
-
-
-//  **************************************** ANIME.GO ****************************************
-// Всё работает, но есть проблема с переходом на следующие страницы списка - список прогружается автоматически
-// и нужно придумать как обрабатывать корректно этот список (нет возможности переключать страницы ручками)
-/*
-const puppeteer = require("puppeteer");
-
-let scrape = (async () => {
-    const browser = await puppeteer.launch({headless: false});
-    const page = await browser.newPage();
-
-    await page.goto("https://animego.org/anime");
-    await page.waitForTimeout(1000);
-
-    const number_of_elems_per_page = await page.evaluate(() => {
-        let elems = document.querySelector('#anime-list-container');
-        return elems.childElementCount;
-    });
-
-    browser.close();
-    return number_of_elems_per_page;
-
-    const list_anime = [];
-
-    for(let i = 1; i <= number_of_elems_per_page; i++) {
-        await page.click(`#anime-list-container > div:nth-child(${i}) > div > div.media-body > div.h5.font-weight-normal.mb-1 > a`);
-        await page.waitForTimeout(2000);
-        const elem = await page.evaluate(() => {
-            let title = document.querySelector('h1').innerText;
-            return {
-                title
-            }
-        });
-        list_anime.push(elem);
-        await page.goBack();
-    };
-
-    browser.close();
-    return list_anime;
 })().then((value) => {
     console.log(value);
 });
