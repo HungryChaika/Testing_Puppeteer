@@ -1,11 +1,7 @@
 //  **************************************** ANIME.GO ****************************************
 // При переходах по анимешкам и возвращении обратно к списку, тебя отскролит выше. Как итог
 // в цикле перебора (с кликами) появляется ошибка, т.к. дочернего элемента с такой большой
-// позицией просто нет ( i ).
-// Возможное решение:
-//      1) Можно брать ссылки от элементов, а переходить по ним потом или как вариант, но тогда
-// нужно починить selector, потому что document.querySelector мой селектор не хавает;
-//      2) можно не кликать по анимешкам, а открывать в новой вкладке (ещё не проверял).
+// позицией просто нет ( i ). { Решил записываю все ссылки анимешек в массив };
 
 const puppeteer = require("puppeteer");
 
@@ -29,19 +25,18 @@ let scrape = (async (document) => {
             }, 100);
         });
     });
-//                                           Подсчёт количества анимешек на странице !!!
-    const number_of_elems_per_page = await page.evaluate(() => {
-        let elems = document.querySelector('#anime-list-container');
-        return elems.childElementCount;
-    });
-
-    const array_of_anime_links = await page.evaluate((number_of_elems_per_page) => {
+//                                           Берём все ссылки с главной страницы !!!
+    const array_of_anime_links = await page.evaluate(() => {
+        let number_of_elems_per_page = document.querySelector('#anime-list-container').childElementCount;
         const arr = [];
         for(let i = 1; i <= number_of_elems_per_page; i++) {
             arr.push(document.querySelector(`#anime-list-container div:nth-child(${i}) div div.media-body div.h5.font-weight-normal.mb-1 a`).href);
         };
         return arr;
     });
+
+
+
 
 /*                                               Берём дату !!!
     await page.waitForTimeout(3000);
@@ -51,32 +46,17 @@ let scrape = (async (document) => {
         };
     });
 */
-/*                                               Вытягивание ссылок !!!
-    const answer = await page.evaluate(() => {
-        return {
-            anime_href: document.querySelector('#anime-list-container div:nth-child(1) div div.media-body div.h5.font-weight-normal.mb-1 a').href
-    };
-    });
-*/
 /*                                          Рабочий переход по ссылкам !!!
     await page.goto(answer.anime_href);
     await page.waitForTimeout(5000);
 */
-    browser.close();
-    //return number_of_elems_per_page;
-    return array_of_anime_links.toString();
 
     const list_anime = [];
 
-    for(let i = 1; i <= number_of_elems_per_page; i++) {
-        const elem = await page.evaluate(i => {
-            return document.querySelector(`#anime-list-container > div:nth-child(${i}) > div > div.media-body > div.h5.font-weight-normal.mb-1 > a`);
-        });
-        list_anime.push(elem);
-    };
-
     browser.close();
-    return list_anime;
+    //return list_anime;
+    return array_of_anime_links;
+    //return answer;
 })().then((value) => {
     console.log(value);
 });
