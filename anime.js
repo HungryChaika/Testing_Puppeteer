@@ -1,17 +1,13 @@
 //  **************************************** ANIME.GO ****************************************
-// При переходах по анимешкам и возвращении обратно к списку, тебя отскролит выше. Как итог
-// в цикле перебора (с кликами) появляется ошибка, т.к. дочернего элемента с такой большой
-// позицией просто нет ( i ). { Решил записываю все ссылки анимешек в массив };
-
 const puppeteer = require("puppeteer");
-
-let scrape = (async (document) => {
+const scraping_anime = (async (document) => {
     const browser = await puppeteer.launch({headless: false});
     const page = await browser.newPage();
-
-    await page.goto("https://animego.org/anime");
-    await page.waitForTimeout(5000);
-//                                                      Рабочий скроллинг!!!!!!
+    //await page.goto("https://animego.org/anime", { waitUntil: 'domcontentloaded' });
+//                                          Фильтрация (беру сериалы и фильмы)
+    //await page.goto("https://animego.org/anime/filter/type-is-tv-or-movie/apply", { waitUntil: 'domcontentloaded' });
+//                                              Рабочий скроллинг !!!
+/*
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             const timer = setInterval(() => {
@@ -22,11 +18,12 @@ let scrape = (async (document) => {
                     clearInterval(timer);
                     resolve();
                 }
-            }, 100);
+            }, 500);
         });
     });
+*/
 //                                           Берём все ссылки с главной страницы !!!
-/*
+/* 
     const array_of_anime_links = await page.evaluate(() => {
         let number_of_elems_per_page = document.querySelector('#anime-list-container').childElementCount;
         const arr = [];
@@ -37,20 +34,21 @@ let scrape = (async (document) => {
     });
 */
 //                                      Проходим по информации с помощью ссылок (Не закончено) !!!
-/*
+/* 
     const all_anime_content = [];
     for(let i = 0; i < array_of_anime_links.length; i++) {
-        await page.goto(array_of_anime_links[i]);
+        await page.goto(array_of_anime_links[i], { waitUntil: 'domcontentloaded' });
 
     };
-    */
-await page.goto('https://animego.org/anime/klub-dobryh-del-2055');    //сериал-вышел
-//await page.goto('https://animego.org/anime/obruchennye-kukushkami-2024');     //сериал-онгоинг
-//await page.goto('https://animego.org/anime/pererozhdenie-dyadi-2058');    //сериал-анонс
-//await page.goto('https://animego.org/anime/hana-i-alisa-delo-ob-ubiystve-2034');     //фильм
-    await page.waitForTimeout(5000);
+ */
+//await page.goto('https://animego.org/anime/klub-dobryh-del-2055', { waitUntil: 'domcontentloaded' });    //сериал-вышел
+//await page.goto('https://animego.org/anime/obruchennye-kukushkami-2024', { waitUntil: 'domcontentloaded' });     //сериал-онгоинг
+//await page.goto('https://animego.org/anime/pererozhdenie-dyadi-2058', { waitUntil: 'domcontentloaded' });    //сериал-анонс
+await page.goto('https://animego.org/anime/hana-i-alisa-delo-ob-ubiystve-2034', { waitUntil: 'domcontentloaded' });     //фильм
+//await page.goto('https://animego.org/anime/poeziya-teney-plamya-1999', { waitUntil: 'domcontentloaded' });     //Без описания
     const answer = page.evaluate(() => {
-        let anime_title = document.querySelector('h1').innerText;
+
+        let anime_title = document.querySelector('h1')?.innerText;
         let anime_type = null;
         let anime_episodes = null;
         let anime_status = null;
@@ -59,38 +57,43 @@ await page.goto('https://animego.org/anime/klub-dobryh-del-2055');    //сери
         let anime_date_release = null;
         let age_rating = null;
         let duration = null;
-        let description = document.querySelector('.description.pb-3').innerText;
-
-        const fuck = [];
+        let description = document.querySelector('.description.pb-3')?.innerText?.replace(/\n+/g, ' ');
 
         const all_elem = document.querySelector('div.anime-info dl.row');
         for(let j = 0; j < all_elem.childElementCount; j++) {
 
-            fuck.push(all_elem.childNodes[j].innerText);
-
-            if(all_elem.childNodes[j].innerText == "Тип") {
-                anime_type = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Тип") {            // Хороший, нет нареканий
+                anime_type = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Эпизоды") {
-                anime_episodes = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Эпизоды") {        // Хороший, а подобное 1 / 12 или 0 / ? можно обыграть добавлением в таблицу
+                                                                        // 2-х столбцов: количество вышедших серий и количество запланированных серий
+                anime_episodes = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Статус") {
-                anime_status = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Статус") {         // Хороший, нет нареканий
+                anime_status = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Жанр") {
-                anime_genres = (all_elem.childNodes[j+1].innerText).split(', ');
+            if(all_elem.childNodes[j]?.innerText == "Жанр") {           // Хороший, нет нареканий
+                anime_genres = (all_elem.childNodes[j+1]?.innerText)?.split(', ');
             };
-            if(all_elem.childNodes[j].innerText == "Первоисточник") {
-                anime_primary_source = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Первоисточник") {  // Хороший, нет нареканий
+                anime_primary_source = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Выпуск") {
-                anime_date_release = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Выпуск") {         // Исправлять однозначно !!!
+                anime_date_release = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Возрастные ограничения") {
-                age_rating = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Возрастные ограничения") {    // Хороший, нет нареканий
+                age_rating = all_elem.childNodes[j+1]?.innerText;
             };
-            if(all_elem.childNodes[j].innerText == "Длительность") {
-                duration = all_elem.childNodes[j+1].innerText;
+            if(all_elem.childNodes[j]?.innerText == "Длительность") {       // Хороший, нет нареканий
+                let elem = all_elem.childNodes[j+1]?.innerText;
+                //duration
+                if(anime_type == 'ТВ Сериал') {
+                    duration = Number(elem?.split('мин.')[0]);
+                };
+                if(anime_type == 'Фильм') {
+                    let hours = elem?.split('ч.');
+                    duration = Number(hours[0]) * 60 + Number(hours[1]?.split('мин.')[0]);
+                };
             };
         };
 
@@ -103,7 +106,7 @@ await page.goto('https://animego.org/anime/klub-dobryh-del-2055');    //сери
             anime_date_release,     // Дата выхода
             anime_primary_source,   // Первоисточник
             age_rating,             // Возрастной рейтинг
-            duration,               // Длительность
+            duration,               // Длительность (в минутах!!!)
             description             // Описание
         }
     });
