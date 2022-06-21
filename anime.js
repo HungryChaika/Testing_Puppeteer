@@ -2,8 +2,10 @@
 // При переходах по анимешкам и возвращении обратно к списку, тебя отскролит выше. Как итог
 // в цикле перебора (с кликами) появляется ошибка, т.к. дочернего элемента с такой большой
 // позицией просто нет ( i ).
-// Возможное решение:   Можно брать ссылки от элементов, а переходить по ним потом или как вариант,
-// можно не кликать по анимешкам, а открывать в новой вкладке (ещё не проверял).
+// Возможное решение:
+//      1) Можно брать ссылки от элементов, а переходить по ним потом или как вариант, но тогда
+// нужно починить selector, потому что document.querySelector мой селектор не хавает;
+//      2) можно не кликать по анимешкам, а открывать в новой вкладке (ещё не проверял).
 
 const puppeteer = require("puppeteer");
 
@@ -12,12 +14,12 @@ let scrape = (async (document) => {
     const page = await browser.newPage();
 
     await page.goto("https://animego.org/anime");
-    await page.waitForTimeout(2000);
-/*                                                      Рабочий скроллинг!!!!!!
+    await page.waitForTimeout(5000);
+//                                                      Рабочий скроллинг!!!!!!
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             const timer = setInterval(() => {
-                const expected_number_of_elements_after_scrolling = 100;
+                const expected_number_of_elements_after_scrolling = 30;
                 const scroll_distance = 300;
                 window.scrollBy(0, scroll_distance);
                 if(document.querySelector('#anime-list-container').childElementCount >= expected_number_of_elements_after_scrolling) {
@@ -27,15 +29,43 @@ let scrape = (async (document) => {
             }, 100);
         });
     });
-*/
+//                                           Подсчёт количества анимешек на странице !!!
     const number_of_elems_per_page = await page.evaluate(() => {
         let elems = document.querySelector('#anime-list-container');
         return elems.childElementCount;
     });
-/*
-    browser.close();
-    return number_of_elems_per_page;
+
+    const array_of_anime_links = await page.evaluate((number_of_elems_per_page) => {
+        const arr = [];
+        for(let i = 1; i <= number_of_elems_per_page; i++) {
+            arr.push(document.querySelector(`#anime-list-container div:nth-child(${i}) div div.media-body div.h5.font-weight-normal.mb-1 a`).href);
+        };
+        return arr;
+    });
+
+/*                                               Берём дату !!!
+    await page.waitForTimeout(3000);
+    const answer = page.evaluate(() => {
+        return {
+            anime_date: document.querySelector('div.anime-info dl.row dd.col-6.col-sm-8.mb-1 span span').innerText
+        };
+    });
 */
+/*                                               Вытягивание ссылок !!!
+    const answer = await page.evaluate(() => {
+        return {
+            anime_href: document.querySelector('#anime-list-container div:nth-child(1) div div.media-body div.h5.font-weight-normal.mb-1 a').href
+    };
+    });
+*/
+/*                                          Рабочий переход по ссылкам !!!
+    await page.goto(answer.anime_href);
+    await page.waitForTimeout(5000);
+*/
+    browser.close();
+    //return number_of_elems_per_page;
+    return array_of_anime_links.toString();
+
     const list_anime = [];
 
     for(let i = 1; i <= number_of_elems_per_page; i++) {
@@ -44,7 +74,17 @@ let scrape = (async (document) => {
         });
         list_anime.push(elem);
     };
-/*  Переход по анимешкам;
+
+    browser.close();
+    return list_anime;
+})().then((value) => {
+    console.log(value);
+});
+
+
+
+// **************************************** Переход по анимешкам с помощью кликов в AnimeGo ****************************************
+/*
     for(let i = 1; i <= number_of_elems_per_page; i++) {
         await page.click(`#anime-list-container > div:nth-child(${i}) > div > div.media-body > div.h5.font-weight-normal.mb-1 > a`);
         await page.waitForTimeout(2000);
@@ -58,13 +98,6 @@ let scrape = (async (document) => {
         await page.goBack();
     };
 */
-    browser.close();
-    return list_anime;
-})().then((value) => {
-    console.log(value);
-});
-
-
 
 
 //  **************************************** YUMMYANIME.TV ****************************************
