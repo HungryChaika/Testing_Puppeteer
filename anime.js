@@ -15,7 +15,7 @@ let scrape = (async (document) => {
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             const timer = setInterval(() => {
-                const expected_number_of_elements_after_scrolling = 30;
+                const expected_number_of_elements_after_scrolling = 10;
                 const scroll_distance = 300;
                 window.scrollBy(0, scroll_distance);
                 if(document.querySelector('#anime-list-container').childElementCount >= expected_number_of_elements_after_scrolling) {
@@ -26,6 +26,7 @@ let scrape = (async (document) => {
         });
     });
 //                                           Берём все ссылки с главной страницы !!!
+/*
     const array_of_anime_links = await page.evaluate(() => {
         let number_of_elems_per_page = document.querySelector('#anime-list-container').childElementCount;
         const arr = [];
@@ -34,29 +35,83 @@ let scrape = (async (document) => {
         };
         return arr;
     });
-
-
-
-
-/*                                               Берём дату !!!
-    await page.waitForTimeout(3000);
-    const answer = page.evaluate(() => {
-        return {
-            anime_date: document.querySelector('div.anime-info dl.row dd.col-6.col-sm-8.mb-1 span span').innerText
-        };
-    });
 */
-/*                                          Рабочий переход по ссылкам !!!
-    await page.goto(answer.anime_href);
+//                                      Проходим по информации с помощью ссылок (Не закончено) !!!
+/*
+    const all_anime_content = [];
+    for(let i = 0; i < array_of_anime_links.length; i++) {
+        await page.goto(array_of_anime_links[i]);
+
+    };
+    */
+await page.goto('https://animego.org/anime/klub-dobryh-del-2055');    //сериал-вышел
+//await page.goto('https://animego.org/anime/obruchennye-kukushkami-2024');     //сериал-онгоинг
+//await page.goto('https://animego.org/anime/pererozhdenie-dyadi-2058');    //сериал-анонс
+//await page.goto('https://animego.org/anime/hana-i-alisa-delo-ob-ubiystve-2034');     //фильм
     await page.waitForTimeout(5000);
-*/
+    const answer = page.evaluate(() => {
+        let anime_title = document.querySelector('h1').innerText;
+        let anime_type = null;
+        let anime_episodes = null;
+        let anime_status = null;
+        let anime_genres = null;
+        let anime_primary_source = null;
+        let anime_date_release = null;
+        let age_rating = null;
+        let duration = null;
+        let description = document.querySelector('.description.pb-3').innerText;
 
-    const list_anime = [];
+        const fuck = [];
+
+        const all_elem = document.querySelector('div.anime-info dl.row');
+        for(let j = 0; j < all_elem.childElementCount; j++) {
+
+            fuck.push(all_elem.childNodes[j].innerText);
+
+            if(all_elem.childNodes[j].innerText == "Тип") {
+                anime_type = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Эпизоды") {
+                anime_episodes = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Статус") {
+                anime_status = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Жанр") {
+                anime_genres = (all_elem.childNodes[j+1].innerText).split(', ');
+            };
+            if(all_elem.childNodes[j].innerText == "Первоисточник") {
+                anime_primary_source = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Выпуск") {
+                anime_date_release = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Возрастные ограничения") {
+                age_rating = all_elem.childNodes[j+1].innerText;
+            };
+            if(all_elem.childNodes[j].innerText == "Длительность") {
+                duration = all_elem.childNodes[j+1].innerText;
+            };
+        };
+
+        return {
+            anime_title,            // Название
+            anime_genres,           // Жанры
+            anime_type,             // Тип
+            anime_status,           // Статус
+            anime_episodes,         // Уоличество эпизодов
+            anime_date_release,     // Дата выхода
+            anime_primary_source,   // Первоисточник
+            age_rating,             // Возрастной рейтинг
+            duration,               // Длительность
+            description             // Описание
+        }
+    });
 
     browser.close();
-    //return list_anime;
-    return array_of_anime_links;
-    //return answer;
+    //return all_anime_content;
+    //return array_of_anime_links;
+    return answer;
 })().then((value) => {
     console.log(value);
 });
