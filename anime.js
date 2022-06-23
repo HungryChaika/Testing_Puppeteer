@@ -21,22 +21,20 @@ const writeFileAsync = async (path, data) => {
     }));
 };
 
-const monthToNumber = async (myMonth) => {
-    switch(myMonth) {
-        case 'января': return 'january';
-        case 'февраля': return 'february';
-        case 'марта': return 'march';
-        case 'апреля': return 'april';
-        case 'мая': return 'may';
-        case 'июня': return 'june';
-        case 'июля': return 'july';
-        case 'августа': return 'august';
-        case 'сентября': return 'september';
-        case 'октября': return 'october';
-        case 'ноября': return 'november';
-        case 'декабря': return 'december';
-        default: return myMonth;
-    };
+const correctDate = myDate => {
+    myDate = myDate.replace(/январ\S+/gm, 1);
+    myDate = myDate.replace(/феврал\S+/gm, 2);
+    myDate = myDate.replace(/март\S+/gm, 3);
+    myDate = myDate.replace(/апрел\S+/gm, 4);
+    myDate = myDate.replace(/ма\S+/gm, 5);
+    myDate = myDate.replace(/июн\S+/gm, 6);
+    myDate = myDate.replace(/июл\S+/gm, 7);
+    myDate = myDate.replace(/август\S+/gm, 8);
+    myDate = myDate.replace(/сентябр\S+/gm, 9);
+    myDate = myDate.replace(/октябр\S+/gm, 10);
+    myDate = myDate.replace(/ноябр\S+/gm, 11);
+    myDate = myDate.replace(/декабр\S+/gm, 12);
+    return myDate;
 };
 
 const collecting_anime = (async (document) => {
@@ -90,6 +88,10 @@ const collecting_anime = (async (document) => {
         await page.waitForTimeout(1000);
         await page.goto(array_of_anime_links[i], { waitUntil: 'domcontentloaded' });
         const info_about_one_anime = await page.evaluate(() => {
+
+            if(document.querySelector('.error-404')?.innerText !== undefined) {
+                return null;
+            };
 
             let anime_title = document.querySelector('h1')?.innerText;
             let anime_type = null;
@@ -152,11 +154,14 @@ const collecting_anime = (async (document) => {
                 description             // Описание
             };
         });
+
+        if(info_about_one_anime == null) {
+            console.log('i am here')
+            continue;
+        };
 //                                        Исправленние даты - сделал англоязычный месяц !!!
         if(info_about_one_anime?.anime_date_release) {
-            let my_date = info_about_one_anime.anime_date_release?.split(' ');
-            my_date[1] = await monthToNumber(my_date[1]);
-            info_about_one_anime.anime_date_release = my_date.join(' ');
+            info_about_one_anime.anime_date_release = correctDate(info_about_one_anime.anime_date_release);
         };
 
         all_anime_content.push(info_about_one_anime);
