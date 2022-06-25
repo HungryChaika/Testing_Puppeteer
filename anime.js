@@ -42,9 +42,9 @@ const collecting_anime = (async (document) => {
     const page = await browser.newPage();
     //await page.goto("https://animego.org/anime", { waitUntil: 'domcontentloaded' });
 //                                          Фильтрация (беру сериалы и фильмы) !!!
-    //await page.goto("https://animego.org/anime/filter/type-is-tv-or-movie/apply", { waitUntil: 'domcontentloaded' });
+    await page.goto("https://animego.org/anime/filter/type-is-tv-or-movie/apply", { waitUntil: 'domcontentloaded' });
 //                                              Рабочий скроллинг !!!
-/* 
+ 
     await page.evaluate(async () => {
         await new Promise((resolve, reject) => {
             const timer = setInterval(() => {
@@ -58,9 +58,9 @@ const collecting_anime = (async (document) => {
             }, 500);
         });
     });
- */
+
 //                                           Берём все ссылки с главной страницы !!!
-/* 
+
     const array_of_anime_links = await page.evaluate(() => {
         let number_of_elems_per_page = document.querySelector('#anime-list-container').childElementCount;
         console.log(number_of_elems_per_page);
@@ -70,10 +70,10 @@ const collecting_anime = (async (document) => {
         };
         return arr;
     });
- */
+
 //                                            Посмотреть и записать json !!! 
     //await writeFileAsync(path.resolve(__dirname, 'links.json'), JSON.stringify(array_of_anime_links));
-    const array_of_anime_links = JSON.parse(await readFileAsync(path.resolve(__dirname, 'links.json')));
+    //const array_of_anime_links = JSON.parse(await readFileAsync(path.resolve(__dirname, 'links.json')));
 
 
 //                                      Проходим по информации с помощью ссылок !!!
